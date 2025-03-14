@@ -10,13 +10,22 @@ const port = 3000;
 
 
 const db = new pg.Client({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_DATABASE,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  // user: process.env.DB_USER,
+  // host: process.env.DB_HOST,
+  // database: process.env.DB_DATABASE,
+  // password: process.env.DB_PASSWORD,
+  // port: process.env.DB_PORT,
+
+  connectionString: process.env.DB_URL,
+  ssl: { rejectUnauthorized: false }, // Required for cloud-hosted PostgreSQL
 });
-db.connect();
+db.connect((err) => {
+  if (err) {
+    console.error("Failed to connect to the database:", err);
+  } else {
+    console.log("Connected to the database");
+  }
+});
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
