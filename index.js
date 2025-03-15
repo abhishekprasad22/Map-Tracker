@@ -9,15 +9,16 @@ const app = express();
 const port = 3000;
 
 
-const db = new pg.Client({
-  // user: process.env.DB_USER,
-  // host: process.env.DB_HOST,
-  // database: process.env.DB_DATABASE,
-  // password: process.env.DB_PASSWORD,
-  // port: process.env.DB_PORT,
 
-  connectionString: process.env.DB_URL,
-  ssl: { rejectUnauthorized: false }, // Required for cloud-hosted PostgreSQL
+const db = new pg.Client({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_DATABASE,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
+
+  // connectionString: process.env.DB_URL,
+  // ssl: { rejectUnauthorized: false }, // Required for cloud-hosted PostgreSQL
 });
 db.connect((err) => {
   if (err) {
@@ -54,6 +55,10 @@ async function checkVisisted() {
 async function getCurrentUser() {
   const result = await db.query("SELECT * FROM users;");
   users = result.rows;
+
+  if (users.length === 0) {
+    return null;
+  }
   return users.find((user) => user.id == currentUserId); 
   //Here we have used == instead of ===, because in === check data types as well as the value.
   // Whereas == only check the value only. Since its hard to determine the data type of user.id and currentUserId.
@@ -64,12 +69,23 @@ app.get("/", async (req, res) => {
   const countries = await checkVisisted();
   const currentUser = await getCurrentUser();
 
-  res.render("index.ejs", {
-    countries: countries,
-    total: countries.length,
-    users: users,
-    color: currentUser.color,
-  });
+  if (!currentUser) {
+    res.render("index.ejs", {
+      countries: [],
+      total: 0,
+      users: users,
+      color: "black",
+    });
+  } else {
+    
+    res.render("index.ejs", {
+      countries: countries,
+      total: countries.length,
+      users: users,
+      color: currentUser.color,
+    });
+  }
+  
 });
 
 app.post("/add", async (req, res) => {
@@ -130,6 +146,40 @@ app.post("/new", async (req, res) => {
   res.redirect("/");
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+app.delete('/deleteUser/:id', async(req, res) => {
+  const userId = req.params.id;
+  try {
+
+    //First user's visited countries will be deleted because of the foreign 
+    // key of the visited_countries table.
+    await db.query('DELETE FROM visited_countries WHERE user_id = $1', [userId]);
+
+
+    // Then the user's data will be deleted from the users table
+    await db.query('DELETE FROM users WHERE id = $1', [userId]);
+
+    // After deleting the current user switch to the available user
+    if (currentUserId == userId){
+      const result = await db.query('SELECT id FROM users LIMIT 1');
+      if (result.rows.length > 0){
+        currentUserId = result.rows[0].id;
+      }
+    }
+
+    res.json({ success: true});
+
+  } catch (err) {
+    console.error('Error deleting the user:', err);
+    res.json({
+      success: false,
+      error: err.message
+    });
+    
+  }
 });
+
+
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+});
+// export default app;

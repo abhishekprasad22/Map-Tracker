@@ -11,17 +11,27 @@
 
 <body>
   <form class="tab-view tab-view-height-auto" action="/user" method="post">
-    <% users.forEach(function(user) { %>
-      <input type="submit" name="user" value="<%= user.id %>" id="<%= user.id %>"
-        onclick="selectLabel('<%= user.id %>')">
-      <label for="<%= user.id %>" style="background-color: <%= user.color %>;">
-        <%= user.name %>
-      </label>
-      <% }); %>
+    <% if (users.length===0){ %>
+      <div class="notice">
+        <p>Please, add a member first !</p>
+      </div>
+      <input type="submit" name="add" value="new" id="tab" onclick="selectLabel('tab')">
+      <label for="tab">Add Member</label>
 
-        <input type="submit" name="add" value="new" id="tab" onclick="selectLabel('tab')">
-        <label for="tab">Add Family Member</label>
+      <% } else{ %>
+        <% users.forEach(function(user) { %>
 
+          <input type="submit" name="user" value="<%= user.id %>" id="<%= user.id %>"
+            onclick="selectLabel('<%= user.id %>')">
+          <label for="<%= user.id %>" style="background-color: <%= user.color %>;">
+            <%= user.name %>
+              <span class="deleteUser" onclick="confirmDelete(event, <%= user.id %>)">&times;</span>
+          </label>
+
+          <% }); %>
+            <input type="submit" name="add" value="new" id="tab" onclick="selectLabel('tab')">
+            <label for="tab">Add Member</label>
+            <% } %>
   </form>
 
   <form action="/add" method="post">
@@ -409,9 +419,6 @@
       document.getElementById(code).style.fill = "<%= color %>"
     });
 
-
-  </script>
-  <script>
     const suggestions = [
       "Afghanistan",
       "Aland Islands",
@@ -674,6 +681,26 @@
     });
 
     input.setAttribute('list', 'suggestions');
+
+
+    // Function for deleting member
+     function confirmDelete(event, userId) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (confirm('Are you sure you want to delete this user and their visited countries ?')) {
+        fetch(`/deleteUser/${userId}`, {method: 'DELETE'})
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          }
+          else{
+            alert('Failed to delete the user')
+          }
+        });
+      }
+    }
   </script>
 </body>
 
