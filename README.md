@@ -5,7 +5,7 @@ Map Tracker is a web application that allows users to track and visualize variou
 
 ## Demo Video
 
-Watch the demo video [![image](![Screenshot 2025-03-18 233112](https://github.com/user-attachments/assets/04d05908-d9f9-46da-bd56-dca9eb852458)
+Watch the demo video [![image](https://github.com/user-attachments/assets/04d05908-d9f9-46da-bd56-dca9eb852458)
 )](https://youtu.be/NOm0hyQFxmc?si=Bpfod5xcDPR5NLJi)
 
 ## Installation
